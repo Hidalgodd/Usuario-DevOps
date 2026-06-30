@@ -38,6 +38,12 @@ jobs:
           name: cobertura-jacoco
           path: target/site/jacoco/
 
+      # IE5: Auditoría de cumplimiento personalizada (script propio)
+      - name: "Auditoría de Cumplimiento (script propio)"
+        run: |
+          chmod +x scripts/audit-compliance.sh
+          ./scripts/audit-compliance.sh
+
       # IE5 / IE6: SonarQube Quality Gate — el pipeline se detiene si falla
       - name: "SonarQube Analysis"
         env:
@@ -45,7 +51,8 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           ./mvnw sonar:sonar \
-            -Dsonar.projectKey=usuario-service \
+            -Dsonar.projectKey=Hidalgodd_Usuario-DevOps \
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
             -Dsonar.projectName="Usuario Service" \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
@@ -59,7 +66,7 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-            "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=usuario-service" \
+            "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=Hidalgodd_Usuario-DevOps" \
             | python3 -c "import sys,json; print(json.load(sys.stdin)['projectStatus']['status'])")
           echo "Quality Gate status: $STATUS"
           if [ "$STATUS" != "OK" ]; then
