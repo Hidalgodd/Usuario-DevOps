@@ -26,3 +26,4 @@
 {"timestamp":"1782856750225","level":"INFO","thread":"main","logger":"com.homemed.usuario.UsuarioApplication","message":"Started UsuarioApplication in 16.761 seconds (process running for 20.222)","context":"default"}
 {"timestamp":"1782856751176","level":"INFO","thread":"http-nio-8081-exec-1","logger":"org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/]","message":"Initializing Spring DispatcherServlet 'dispatcherServlet'","context":"default"}
 {"timestamp":"1782856751178","level":"INFO","thread":"http-nio-8081-exec-1","logger":"org.springframework.web.servlet.DispatcherServlet","message":"Initializing Servlet 'dispatcherServlet'","context":"default"}
+{"timestamp":"1782856751181","level":"INFO","thread":"http-nio-8081-exec-1","logger":"org.springframework.web.servlet.DispatcherServlet","message":"Completed initialization in 2 ms","context":"default"}
