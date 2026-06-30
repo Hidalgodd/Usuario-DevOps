@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usuario-deployment
+  labels:
+    app: usuario
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: usuario
+  template:
+    metadata:
+      labels:
+        app: usuario
+    spec:
+      containers:
+      - name: usuario-app
+        # La imagen se reemplazará dinámicamente en el pipeline de GitHub Actions
+        image: <ECR_REPO_URL>/usuario-service:${IMAGE_TAG}
+        ports:
+        - containerPort: 8081
+        env:
+        - name: DB_HOST
+          value: mysql
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: usuario_service
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: usuario-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: usuario
+  ports:
+    - protocol: TCP
+      port: 80         # Puerto expuesto al mundo (Load Balancer)
+      targetPort: 8081 # Puerto donde corre la app dentro del contenedor

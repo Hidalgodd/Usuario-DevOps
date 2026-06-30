@@ -1,0 +1,53 @@
+name: CI/CD Usuario Service - Deploy AWS ECS
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login en Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build imagen y push a ECR
+        run: |
+          docker build -t usuario-service .
+          docker tag usuario-service:latest ${{ secrets.ECR_REPO_URL_USUARIO }}:latest
+          docker push ${{ secrets.ECR_REPO_URL_USUARIO }}:latest
+
+      - name: Descargar Task Definition actual
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} \
+            --query taskDefinition > task-definition.json
+
+      - name: Actualizar Tag de la imagen en la Task Def
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: usuario-app
+          image: ${{ secrets.ECR_REPO_URL_USUARIO }}:latest
+
+      - name: Desplegar nueva Task Definition en el Servicio
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          service: ${{ secrets.ECS_SERVICE_NAME }}
+          cluster: ${{ secrets.ECS_CLUSTER_NAME }}
+          wait-for-service-stability: true

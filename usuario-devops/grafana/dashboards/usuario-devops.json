@@ -1,0 +1,246 @@
+{
+  "title": "Usuario Service - DevOps Dashboard",
+  "uid": "usuario-devops-v1",
+  "tags": ["devops", "usuario-service", "cicd"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "🟢 Disponibilidad del Servicio",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "up{job=\"usuario-service\"}",
+          "legendFormat": "Estado"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "thresholds": {
+          "steps": [
+            { "color": "red", "value": 0 },
+            { "color": "green", "value": 1 }
+          ]
+        },
+        "mappings": [
+          { "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } }, "type": "value" }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "title": "📊 Requests por Segundo (RPS)",
+      "type": "timeseries",
+      "gridPos": { "x": 4, "y": 0, "w": 10, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(http_server_requests_seconds_count{application=\"usuario-service\"}[1m])",
+          "legendFormat": "{{method}} {{uri}} {{status}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "mode": "palette-classic" }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "🔴 Tasa de Errores HTTP (4xx/5xx)",
+      "type": "timeseries",
+      "gridPos": { "x": 14, "y": 0, "w": 10, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(http_server_requests_seconds_count{application=\"usuario-service\",status=~\"4..|5..\"}[1m])",
+          "legendFormat": "Errores {{status}} {{uri}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "fixedColor": "red", "mode": "fixed" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 0.1 },
+              { "color": "red", "value": 0.5 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "⏱️ Latencia P95 (ms)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 4, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"usuario-service\"}[5m])) * 1000",
+          "legendFormat": "P95"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "thresholds": {
+          "steps": [
+            { "color": "green", "value": 0 },
+            { "color": "yellow", "value": 500 },
+            { "color": "red", "value": 1000 }
+          ]
+        }
+      },
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "id": 5,
+      "title": "🧠 Uso de Memoria JVM (Heap)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_memory_used_bytes{application=\"usuario-service\",area=\"heap\"}",
+          "legendFormat": "Heap Usado"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_memory_max_bytes{application=\"usuario-service\",area=\"heap\"}",
+          "legendFormat": "Heap Máximo"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "id": 6,
+      "title": "⚙️ CPU Usage (JVM)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "process_cpu_usage{application=\"usuario-service\"}",
+          "legendFormat": "CPU Proceso"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "system_cpu_usage{application=\"usuario-service\"}",
+          "legendFormat": "CPU Sistema"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "🧵 Threads JVM Activos",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 16, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_threads_live_threads{application=\"usuario-service\"}",
+          "legendFormat": "Threads Activos"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      }
+    },
+    {
+      "id": 8,
+      "title": "🗄️ Conexiones DB Activas (HikariCP)",
+      "type": "timeseries",
+      "gridPos": { "x": 4, "y": 16, "w": 10, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "hikaricp_connections_active{application=\"usuario-service\"}",
+          "legendFormat": "Activas"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "hikaricp_connections_idle{application=\"usuario-service\"}",
+          "legendFormat": "Idle"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "hikaricp_connections_max{application=\"usuario-service\"}",
+          "legendFormat": "Máximo"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "📋 Logs de Errores Recientes",
+      "type": "logs",
+      "gridPos": { "x": 14, "y": 16, "w": 10, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "loki" },
+          "expr": "{app=\"usuario-service\"} |= \"ERROR\"",
+          "legendFormat": ""
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "sortOrder": "Descending"
+      }
+    },
+    {
+      "id": 10,
+      "title": "✅ Cobertura de Tests (Último Build)",
+      "type": "stat",
+      "description": "Porcentaje de líneas cubiertas por tests. Valor seteado desde el pipeline CI vía anotación de Grafana o variable.",
+      "gridPos": { "x": 0, "y": 20, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "usuario_service_test_coverage_percent",
+          "legendFormat": "Cobertura %"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "thresholds": {
+          "steps": [
+            { "color": "red", "value": 0 },
+            { "color": "yellow", "value": 60 },
+            { "color": "green", "value": 80 }
+          ]
+        }
+      },
+      "fieldConfig": { "defaults": { "unit": "percent" } }
+    },
+    {
+      "id": 11,
+      "title": "🚀 Historial de Despliegues",
+      "type": "table",
+      "description": "Anotaciones de Grafana creadas automáticamente por el pipeline CI/CD en cada deploy exitoso.",
+      "gridPos": { "x": 4, "y": 20, "w": 20, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "changes(process_start_time_seconds{application=\"usuario-service\"}[1h])",
+          "legendFormat": "Reinicios del servicio"
+        }
+      ]
+    }
+  ]
+}

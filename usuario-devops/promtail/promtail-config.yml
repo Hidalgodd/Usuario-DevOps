@@ -1,0 +1,28 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: usuario-service-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: spring-logs
+          environment: development
+          app: usuario-service
+          __path__: /var/log/spring/*.log  # Ruta dentro del contenedor de Promtail
+
+    pipeline_stages:
+      # Extrae traceId y spanId del patrón estándar de Spring Boot: [nombre-app,traceId,spanId]
+      - regex:
+          expression: '\[(?P<spring_app>[^,]*),(?P<traceId>[^,]*),(?P<spanId>[^\]]*)\]'
+      - labels:
+          traceId:
+          spanId:
